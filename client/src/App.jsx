@@ -9,6 +9,9 @@ function App() {
   const [phone, setPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [cart, setCart] = useState([]);
+  const [trackingId, setTrackingId] = useState("");
+  const [trackedOrder, setTrackedOrder] = useState(null);
+  const [trackingError, setTrackingError] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:3001/api/menu")
@@ -119,6 +122,34 @@ function App() {
     } catch (error) {
       console.error(error);
       alert("Failed to create order");
+    }
+  }
+
+  async function checkOrderStatus() {
+    setTrackedOrder(null);
+    setTrackingError("");
+  
+    if (!trackingId) {
+      setTrackingError("Please enter order ID");
+      return;
+    }
+  
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/orders/${trackingId}`
+      );
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setTrackingError(data.error || "Order not found");
+        return;
+      }
+  
+      setTrackedOrder(data);
+    } catch (error) {
+      console.error(error);
+      setTrackingError("Failed to fetch order");
     }
   }
 
@@ -261,6 +292,33 @@ function App() {
         </button>
 
       </div>
+
+      <hr />
+
+      <div>
+        <h2>Track Order</h2>
+
+        <input
+          type="text"
+          placeholder="Enter Order ID"
+          value={trackingId}
+          onChange={(e) => setTrackingId(e.target.value)}
+        />
+
+        <button onClick={checkOrderStatus}>Check Status</button>
+
+        {trackingError && <p>{trackingError}</p>}
+
+        {trackedOrder && (
+          <div>
+            <h3>Order #{trackedOrder.id}</h3>
+            <p>Status: {trackedOrder.status}</p>
+            <p>Payment: {trackedOrder.paymentStatus}</p>
+            <p>Total Price: ₪{trackedOrder.totalPrice}</p>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
