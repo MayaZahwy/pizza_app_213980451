@@ -48,6 +48,32 @@ function App() {
     setSelectedToppingIds([]);
   }
 
+  function calculateEstimatedPrice() {
+    let total = 0;
+
+    for (const item of cart) {
+      const pizza = menu.pizzas.find((p) => p.id === item.pizzaId);
+      const size = menu.sizes.find((s) => s.id === item.sizeId);
+
+      if (!pizza || !size) {
+        continue;
+      }
+
+      total += pizza.price;
+      total += size.price;
+
+      for (const toppingId of item.toppingIds || []) {
+        const topping = menu.toppings.find((t) => t.id === toppingId);
+
+        if (topping) {
+          total += topping.price;
+        }
+      }
+    }
+
+    return total;
+  }
+
   if (!menu) {
     return <h2>Loading menu...</h2>;
   }
@@ -118,6 +144,34 @@ function App() {
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      <hr />
+
+      <div data-testid="order-summary-panel">
+        <h2>Order Summary</h2>
+
+        {cart.length === 0 ? (
+          <p>No items to summarize.</p>
+        ) : (
+          <>
+            <p>Number of pizzas: {cart.length}</p>
+
+            <ul>
+              {cart.map((item, index) => (
+                <li key={index}>
+                  {item.pizzaName} - {item.sizeName} -{" "}
+                  {item.toppingNames.length > 0
+                    ? item.toppingNames.join(", ")
+                    : "No toppings"}
+                </li>
+              ))}
+            </ul>
+
+            <h3>Estimated Total: ₪{calculateEstimatedPrice()}</h3>
+            <p>Final price will be calculated by the server.</p>
+          </>
         )}
       </div>
     </div>
