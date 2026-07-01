@@ -14,6 +14,8 @@ function App() {
   const [trackingError, setTrackingError] = useState("");
   const [employeeOrders, setEmployeeOrders] = useState([]);
   const [employeeError, setEmployeeError] = useState("");
+  const [deliveryOrders, setDeliveryOrders] = useState([]);
+  const [deliveryError, setDeliveryError] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:3001/api/menu")
@@ -201,6 +203,46 @@ function App() {
     }
   }
 
+  async function loadDeliveryOrders() {
+    setDeliveryError("");
+  
+    try {
+      const response = await fetch("http://localhost:3001/api/orders?status=ready");
+      const data = await response.json();
+  
+      setDeliveryOrders(data);
+    } catch (error) {
+      console.error(error);
+      setDeliveryError("Failed to load delivery orders");
+    }
+  }
+  
+  async function markOrderAsDelivered(orderId) {
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/orders/${orderId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ status: "delivered" })
+        }
+      );
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setDeliveryError(data.error || "Failed to update delivery order");
+        return;
+      }
+  
+      loadDeliveryOrders();
+    } catch (error) {
+      console.error(error);
+      setDeliveryError("Failed to mark order as delivered");
+    }
+  }
 
   if (!menu) {
     return <h2>Loading menu...</h2>;
@@ -399,6 +441,44 @@ function App() {
           </ul>
         )}
       </div>
+
+      <hr />
+
+      <div data-testid="delivery-orders">
+        <h2>Delivery Orders</h2>
+
+        <button onClick={loadDeliveryOrders}>Load Ready Orders</button>
+
+        {deliveryError && <p>{deliveryError}</p>}
+
+        {deliveryOrders.length === 0 ? (
+          <p>No ready orders for delivery.</p>
+        ) : (
+          <ul>
+            {deliveryOrders.map((order) => (
+              <li key={order.id}>
+                <strong>Order #{order.id}</strong>
+                <br />
+                Customer: {order.customerName}
+                <br />
+                Phone: {order.phone}
+                <br />
+                Address: {order.deliveryAddress}
+                <br />
+                Status: {order.status}
+                <br />
+                <button onClick={() => markOrderAsDelivered(order.id)}>
+                  Mark as Delivered
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+
+
+      
     </div>
 
     
