@@ -95,7 +95,7 @@ for (const pizza of pizzas) {
     }
 }
 
-const totalPrice = calculateOrderPrice(pizzas);
+const priceDetails = calculateOrderPrice(pizzas);
 
 const newOrder = {
     id: Date.now().toString(),
@@ -103,7 +103,9 @@ const newOrder = {
     phone,
     deliveryAddress,
     pizzas,
-    totalPrice,
+    pizzasPrice: priceDetails.pizzasPrice,
+    deliveryFee: priceDetails.deliveryFee,
+    totalPrice: priceDetails.totalPrice,
     status: "new",
     paymentStatus: "paid",
     createdAt: new Date().toISOString()
