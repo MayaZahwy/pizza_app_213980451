@@ -2,21 +2,51 @@ import { useEffect, useState } from "react";
 
 function App() {
   const [menu, setMenu] = useState(null);
+  const [selectedPizzaId, setSelectedPizzaId] = useState("");
+  const [selectedSizeId, setSelectedSizeId] = useState("");
+  const [selectedToppingIds, setSelectedToppingIds] = useState([]);
+  const [cart, setCart] = useState([]);
 
   useEffect(() => {
     fetch("http://localhost:3001/api/menu")
-      .then((response) => {
-        console.log("Response:", response);
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((data) => {
-        console.log("Menu data:", data);
         setMenu(data);
+        setSelectedPizzaId(data.pizzas[0].id);
+        setSelectedSizeId(data.sizes[0].id);
       })
       .catch((error) => {
         console.error("Fetch error:", error);
       });
   }, []);
+
+  function handleToppingChange(toppingId) {
+    if (selectedToppingIds.includes(toppingId)) {
+      setSelectedToppingIds(selectedToppingIds.filter((id) => id !== toppingId));
+    } else {
+      setSelectedToppingIds([...selectedToppingIds, toppingId]);
+    }
+  }
+
+  function addToCart() {
+    const pizza = menu.pizzas.find((item) => item.id === selectedPizzaId);
+    const size = menu.sizes.find((item) => item.id === selectedSizeId);
+    const toppings = menu.toppings.filter((item) =>
+      selectedToppingIds.includes(item.id)
+    );
+
+    const cartItem = {
+      pizzaId: pizza.id,
+      pizzaName: pizza.name,
+      sizeId: size.id,
+      sizeName: size.name,
+      toppingIds: toppings.map((topping) => topping.id),
+      toppingNames: toppings.map((topping) => topping.name)
+    };
+
+    setCart([...cart, cartItem]);
+    setSelectedToppingIds([]);
+  }
 
   if (!menu) {
     return <h2>Loading menu...</h2>;
@@ -29,32 +59,66 @@ function App() {
       <div data-testid="menu-list">
         <h2>Menu</h2>
 
-        <h3>Pizzas</h3>
-        <ul>
+        <h3>Choose Pizza</h3>
+        <select
+          value={selectedPizzaId}
+          onChange={(event) => setSelectedPizzaId(event.target.value)}
+        >
           {menu.pizzas.map((pizza) => (
-            <li key={pizza.id}>
+            <option key={pizza.id} value={pizza.id}>
               {pizza.name} - ₪{pizza.price}
-            </li>
+            </option>
           ))}
-        </ul>
+        </select>
 
-        <h3>Sizes</h3>
-        <ul>
+        <h3>Choose Size</h3>
+        <select
+          value={selectedSizeId}
+          onChange={(event) => setSelectedSizeId(event.target.value)}
+        >
           {menu.sizes.map((size) => (
-            <li key={size.id}>
+            <option key={size.id} value={size.id}>
               {size.name} - ₪{size.price}
-            </li>
+            </option>
           ))}
-        </ul>
+        </select>
 
-        <h3>Toppings</h3>
-        <ul>
-          {menu.toppings.map((topping) => (
-            <li key={topping.id}>
-              {topping.name} - ₪{topping.price}
-            </li>
-          ))}
-        </ul>
+        <h3>Choose Toppings</h3>
+        {menu.toppings.map((topping) => (
+          <label key={topping.id} style={{ display: "block" }}>
+            <input
+              type="checkbox"
+              checked={selectedToppingIds.includes(topping.id)}
+              onChange={() => handleToppingChange(topping.id)}
+            />
+            {topping.name} - ₪{topping.price}
+          </label>
+        ))}
+
+        <br />
+
+        <button onClick={addToCart}>Add To Cart</button>
+      </div>
+
+      <hr />
+
+      <div data-testid="cart">
+        <h2>Cart</h2>
+
+        {cart.length === 0 ? (
+          <p>No pizzas in cart yet.</p>
+        ) : (
+          <ul>
+            {cart.map((item, index) => (
+              <li key={index}>
+                <strong>{item.pizzaName}</strong> | {item.sizeName} | Toppings:{" "}
+                {item.toppingNames.length > 0
+                  ? item.toppingNames.join(", ")
+                  : "No toppings"}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
