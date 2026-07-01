@@ -5,6 +5,9 @@ function App() {
   const [selectedPizzaId, setSelectedPizzaId] = useState("");
   const [selectedSizeId, setSelectedSizeId] = useState("");
   const [selectedToppingIds, setSelectedToppingIds] = useState([]);
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [cart, setCart] = useState([]);
 
   useEffect(() => {
@@ -74,6 +77,51 @@ function App() {
     return total;
   }
 
+  async function submitOrder() {
+    if (cart.length === 0) {
+      alert("Cart is empty");
+      return;
+    }
+  
+    const orderPayload = {
+      customerName,
+      phone,
+      deliveryAddress,
+      pizzas: cart.map((item) => ({
+        pizzaId: item.pizzaId,
+        sizeId: item.sizeId,
+        toppingIds: item.toppingIds
+      }))
+    };
+  
+    try {
+      const response = await fetch("http://localhost:3001/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(orderPayload)
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        alert(data.error || "Invalid order details");
+        return;
+      }
+  
+      alert(`Order created successfully!\nOrder ID: ${data.id}`);
+  
+      setCart([]);
+      setCustomerName("");
+      setPhone("");
+      setDeliveryAddress("");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to create order");
+    }
+  }
+
   if (!menu) {
     return <h2>Loading menu...</h2>;
   }
@@ -128,6 +176,40 @@ function App() {
 
       <hr />
 
+      <hr />
+
+      <h2>Customer Details</h2>
+
+      <input
+        type="text"
+        placeholder="Customer Name"
+        value={customerName}
+        onChange={(e) => setCustomerName(e.target.value)}
+      />
+
+      <br />
+      <br />
+
+      <input
+        type="text"
+        placeholder="Phone"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+      />
+
+      <br />
+      <br />
+
+      <input
+        type="text"
+        placeholder="Delivery Address"
+        value={deliveryAddress}
+        onChange={(e) => setDeliveryAddress(e.target.value)}
+      />
+
+      <br />
+      <br />
+
       <div data-testid="cart">
         <h2>Cart</h2>
 
@@ -173,6 +255,11 @@ function App() {
             <p>Final price will be calculated by the server.</p>
           </>
         )}
+
+        <button onClick={submitOrder}>
+          Place Order
+        </button>
+
       </div>
     </div>
   );
