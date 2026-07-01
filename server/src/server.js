@@ -12,6 +12,8 @@ const menu = require("./data/menu");
 
 const { addOrder } = require("./orders/ordersStore");
 
+const { calculateOrderPrice } = require("./services/priceService");
+
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "Pizza server is running"
@@ -77,13 +79,15 @@ for (const pizza of pizzas) {
     }
 }
 
+const totalPrice = calculateOrderPrice(pizzas);
+
 const newOrder = {
     id: Date.now().toString(),
     customerName,
     phone,
     deliveryAddress,
     pizzas,
-    totalPrice: 0,
+    totalPrice,
     status: "new",
     paymentStatus: "paid",
     createdAt: new Date().toISOString()
