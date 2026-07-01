@@ -17,9 +17,22 @@ function getOrdersByStatus(status) {
   return orders.filter((order) => order.status === status);
 }
 
+function updateOrderStatus(id, newStatus) {
+  const order = orders.find((order) => order.id === id);
+
+  if (!order) {
+    return null;
+  }
+
+  order.status = newStatus;
+
+  return order;
+}
+
 module.exports = {
   getAllOrders,
   addOrder,
   getOrderById,
-  getOrdersByStatus
+  getOrdersByStatus,
+  updateOrderStatus
 };

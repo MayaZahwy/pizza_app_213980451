@@ -13,10 +13,21 @@ const menu = require("./data/menu");
 const {
     addOrder,
     getOrderById,
-    getOrdersByStatus
+    getOrdersByStatus,
+    updateOrderStatus
   } = require("./orders/ordersStore");
+
 const { calculateOrderPrice } = require("./services/priceService");
 
+function isValidStatusTransition(currentStatus, newStatus) {
+    const transitions = {
+      new: "preparing",
+      preparing: "ready",
+      ready: "delivered"
+    };
+  
+    return transitions[currentStatus] === newStatus;
+}
 
 
 app.get("/", (req, res) => {
@@ -115,18 +126,45 @@ app.get("/api/orders/:id", (req, res) => {
     return res.status(200).json(order);
   });
 
-  app.get("/api/orders", (req, res) => {
-    const { status } = req.query;
-  
-    if (!status) {
-      return res.status(200).json([]);
-    }
-  
-    const orders = getOrdersByStatus(status);
-  
-    return res.status(200).json(orders);
-  });
+app.get("/api/orders", (req, res) => {
+const { status } = req.query;
 
+if (!status) {
+    return res.status(200).json([]);
+}
+
+const orders = getOrdersByStatus(status);
+
+return res.status(200).json(orders);
+});
+
+app.patch("/api/orders/:id/status", (req, res) => {
+const { status } = req.body;
+
+const order = getOrderById(req.params.id);
+
+if (!order) {
+    return res.status(404).json({
+    error: "Order not found"
+    });
+}
+
+if (!status) {
+    return res.status(400).json({
+    error: "Status is required"
+    });
+}
+
+if (!isValidStatusTransition(order.status, status)) {
+    return res.status(409).json({
+    error: "Invalid status transition"
+    });
+}
+
+const updatedOrder = updateOrderStatus(order.id, status);
+
+return res.status(200).json(updatedOrder);
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
