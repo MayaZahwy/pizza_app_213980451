@@ -10,9 +10,14 @@ app.use(express.json());
 
 const menu = require("./data/menu");
 
-const { addOrder } = require("./orders/ordersStore");
-
+const {
+    addOrder,
+    getOrderById,
+    getOrdersByStatus
+  } = require("./orders/ordersStore");
 const { calculateOrderPrice } = require("./services/priceService");
+
+
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -98,6 +103,29 @@ addOrder(newOrder);
 return res.status(201).json(newOrder);
 });
 
+app.get("/api/orders/:id", (req, res) => {
+    const order = getOrderById(req.params.id);
+  
+    if (!order) {
+      return res.status(404).json({
+        error: "Order not found"
+      });
+    }
+  
+    return res.status(200).json(order);
+  });
+
+  app.get("/api/orders", (req, res) => {
+    const { status } = req.query;
+  
+    if (!status) {
+      return res.status(200).json([]);
+    }
+  
+    const orders = getOrdersByStatus(status);
+  
+    return res.status(200).json(orders);
+  });
 
 
 app.listen(PORT, () => {
