@@ -252,6 +252,22 @@ function App() {
     <div>
       <h1>Pizza App</h1>
 
+      <div
+        style={{
+          backgroundColor: "#fff3cd",
+          border: "2px solid #ffc107",
+          color: "#856404",
+          padding: "15px",
+          borderRadius: "10px",
+          textAlign: "center",
+          fontSize: "20px",
+          fontWeight: "bold",
+          marginBottom: "20px"
+        }}
+      >
+        🍕 Special Offer! 🚚 Free Delivery on Orders Above ₪100
+      </div>
+
       <div data-testid="menu-list">
         <h2>Menu</h2>
 
